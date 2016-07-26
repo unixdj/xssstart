@@ -1,0 +1,53 @@
+.\" Copyright (c) 2016 Vadim Vygonets <vadik@vygo.net>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd 26 July 2016
+.Dt XSSSTART 1 LOCAL
+.Os
+.Sh NAME
+.Nm xssstart
+.Nd run a command when X screen saver activates
+.Sh SYNOPSIS
+.Nm
+.Ar command
+.Op Ar argument ...
+.Sh DESCRIPTION
+.Nm
+runs the specified command on
+.Xr XScreenSaver 3
+.Li ScreenSaverOn
+events.
+As long as the command is running, further events are ignored.
+.Sh EXAMPLES
+.Bl -tag -width indent
+.It Li "xssstart xlock -mode blank &"
+Starts
+.Nm
+in the background, running
+.Xr xlock 1
+in blank mode when the screen saver activates.
+.It Li "xset s 600"
+Sets the screen saver parameters to activate after 600 seconds of inactivity.
+.It Li "xset s activate"
+Activates the screen saver immediately.
+.El
+.Sh SEE ALSO
+.Xr slock 1 ,
+.Xr xautolock 1 ,
+.Xr xlock 1 ,
+.Xr xset 1 ,
+.Xr xss 1 ,
+.Xr xssstate 1
+.Sh AUTHORS
+.An Vadim Vygonets Aq vadik@vygo.net

@@ -1,0 +1,31 @@
+XSSSTART(1)                      Local Manual                      XSSSTART(1)
+
+NAME
+     xssstart — run a command when X screen saver activates
+
+SYNOPSIS
+     xssstart command [argument ...]
+
+DESCRIPTION
+     xssstart runs the specified command on XScreenSaver(3) ScreenSaverOn
+     events.  As long as the command is running, further events are ignored.
+
+EXAMPLES
+     xssstart xlock -mode blank &
+             Starts xssstart in the background, running xlock(1) in blank mode
+             when the screen saver activates.
+
+     xset s 600
+             Sets the screen saver parameters to activate after 600 seconds of
+             inactivity.
+
+     xset s activate
+             Activates the screen saver immediately.
+
+SEE ALSO
+     slock(1), xautolock(1), xlock(1), xset(1), xss(1), xssstate(1)
+
+AUTHORS
+     Vadim Vygonets <vadik@vygo.net>
+
+BSD                              26 July 2016                              BSD
