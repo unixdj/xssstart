@@ -20,6 +20,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <X11/Xlib.h>
@@ -70,10 +71,16 @@ main(int argc, char *argv[])
 {
 	XEvent		 ev;
 	struct sigaction act = { };
-	int		 evbase, errbase;
+	int		 evbase, errbase, argi, deargi = -1;
 
-	if (argc < 2)
-		errx(2, "usage: xssstart command [argument ...]\n");
+	for (argi = 1; argi < argc; argi++) {
+		if (strcmp(argv[argi], "--") == 0) {
+			deargi = argi + 1;
+			argv[argi] = NULL;
+		}
+	}
+	if (argc < 2 || deargi >= argc)
+		errx(2, "usage: %s [activate-command [argument ...]] [-- deactivate-command [argument ...]]", argv[0]);
 	if ((dpy = XOpenDisplay(NULL)) == NULL)
 		errx(1, "no display");
 	atexit(closedisplay);
@@ -87,8 +94,12 @@ main(int argc, char *argv[])
 	if (sigaction(SIGCHLD, &act, NULL) == -1)
 		err(1, "sigaction");
 	while (XNextEvent(dpy, &ev) == 0) {
-		if (((XScreenSaverNotifyEvent *)&ev)->state == ScreenSaverOn &&
-		    child == 0) {
+		if (child != 0)
+			continue;
+		switch (((XScreenSaverNotifyEvent *)&ev)->state) {
+		case ScreenSaverOn:
+			if (deargi == 2)
+				continue;
 			switch ((child = fork())) {
 			case -1:
 				err(1, "fork");
@@ -97,6 +108,19 @@ main(int argc, char *argv[])
 				dpy = NULL;
 				err(1, "exec");
 			}
+			break;
+		case ScreenSaverOff:
+			if (deargi < 0)
+				continue;
+			switch ((child = fork())) {
+			case -1:
+				err(1, "fork");
+			case 0:
+				execvp(argv[deargi], argv + deargi);
+				dpy = NULL;
+				err(1, "exec");
+			}
+			break;
 		}
 	}
 	return 0;

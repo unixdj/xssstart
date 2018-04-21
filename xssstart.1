@@ -28,7 +28,8 @@ runs the specified command on
 .Xr XScreenSaver 3
 .Li ScreenSaverOn
 events.
-As long as the command is running, further events are ignored.
+An additional command can be specified for ScreenSaverOff events. Separate the commands with a -- argument.
+As long as a command is running, further events are ignored.
 .Sh EXAMPLES
 .Bl -tag -width indent
 .It Li "xssstart xlock -mode blank &"
@@ -37,6 +38,8 @@ Starts
 in the background, running
 .Xr xlock 1
 in blank mode when the screen saver activates.
+.It Li "xssstart xlock -mode blank -- aplay unblank.wav &"
+Does the same but also plays unblank.wav when the screen saver deactivates.
 .It Li "xset s 600"
 Sets the screen saver parameters to activate after 600 seconds of inactivity.
 .It Li "xset s activate"
