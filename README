@@ -1,3 +1,10 @@
+README(0)                        Local Manual                        README(0)
+
+NAME
+     xssstart — run a command when X screen saver activates
+     xsssuspend — suspend X screen saver
+
+BSD                             30 January 2022                            BSD
 XSSSTART(1)                      Local Manual                      XSSSTART(1)
 
 NAME
