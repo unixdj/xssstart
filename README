@@ -29,3 +29,44 @@ AUTHORS
      Vadim Vygonets <vadik@vygo.net>
 
 BSD                              26 July 2016                              BSD
+XSSSUSPEND(1)                    Local Manual                    XSSSUSPEND(1)
+
+NAME
+     xsssuspend — suspend X screen saver
+
+SYNOPSIS
+     xsssuspend [command [argument ...]]
+
+DESCRIPTION
+     xsssuspend suspends the X screen saver and DPMS timer for the duration of
+     its runtime.  After xsssuspend terminates for any reason or is discon‐
+     nected from the X server, the timers are restarted, unless suspended by
+     another client.
+
+     If no command is given, xsssuspend will wait indefinitely until it's ter‐
+     minated by a signal.  It's meant to be killed by a keyboard interrupt
+     (normally Control-C).
+
+     If a command is given, xsssuspend runs the command and exits after it's
+     finished, or immediately if execution fails.
+
+EXAMPLES
+     xsssuspend telnet towel.blinkenlights.nl
+             Watch Star Wars in the terminal, suspending the screen saver for
+             the duration of the film.
+
+DIAGNOSTICS
+     xsssuspend exits 0 on success, 127 if exec(3) fails and 1 if another er‐
+     ror occurs.
+
+     Being killed by SIGINT (keyboard interrupt) or SIGTERM (termination) sig‐
+     nal is not considered an error.  Exit status of the command is not propa‐
+     gated.
+
+SEE ALSO
+     XScreenSaverSuspend(3), xset(1)
+
+AUTHORS
+     Vadim Vygonets <vadik@vygo.net>
+
+BSD                             30 January 2022                            BSD
