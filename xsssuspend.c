@@ -21,6 +21,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h> // XXX
 #include <unistd.h>
 
 #include <X11/Xlib.h>
@@ -34,8 +35,6 @@
 #endif
 #endif
 
-static volatile pid_t	 child;
-static volatile int	 lastsig;
 static Display		*dpy;
 
 static void
@@ -57,28 +56,40 @@ eh(Display *dpy, XErrorEvent *e)
 	/* NOTREACHED */
 }
 
-static void
-handle(int sig)
+static void watch(Display *dpy, XPointer client_data, int fd, Bool opening,
+    XPointer *watch_data)
 {
-	int	status;
+	(void)dpy;
+	(void)client_data;
+	(void)watch_data;
+	time_t tm = time(NULL);
+	fputs(ctime(&tm), stdout); // XXX
+	printf("X connection: %s fd %d\n", opening ? "open" : "close", fd);
+}
 
-	lastsig = sig;
-	if (sig == SIGCHLD &&
-	    wait4(child, &status, WNOHANG, NULL) == child &&
-	    (WIFEXITED(status) || WIFSIGNALED(status))) {
-		child = 0;
+static void add_watch(void)
+{
+	int	*fdret;
+	int	 i, cnt;
+
+	if (!XInternalConnectionNumbers(dpy, &fdret, &cnt)) {
+		warnx("XInternalConnectionNumbers");
+		return;
+	}
+	printf("XInternalConnectionNumbers: cnt %d\n", cnt);
+	for (i = 0; i < cnt; i++) {
+		printf("fd %d\n", fdret[i]);
+		if (!XAddConnectionWatch(dpy, watch, NULL))
+			warnx("XAddConnectionWatch");
 	}
 }
 
 int
 main(int argc, char *argv[])
 {
-	struct sigaction act = {
-		.sa_handler =	handle,
-		.sa_flags =	SA_NOCLDSTOP | SA_RESTART,
-	};
 	sigset_t	set, oldset;
-	int		evbase, errbase;
+	pid_t		child;
+	int		evbase, errbase, sig, status;
 
 	if ((dpy = XOpenDisplay(NULL)) == NULL)
 		errx(1, "no display");
@@ -87,21 +98,14 @@ main(int argc, char *argv[])
 		errx(1, "X11 extension MIT-SCREEN-SAVER not supported");
 	XSetErrorHandler(eh);
 	XScreenSaverSuspend(dpy, True);
+	add_watch();
 	sigemptyset(&set);
-	if (sigaction(SIGINT, &act, NULL) == -1)
-		err(1, "sigaction");
-	if (sigaction(SIGTERM, &act, NULL) == -1)
-		err(1, "sigaction");
 	sigaddset(&set, SIGINT);
 	sigaddset(&set, SIGTERM);
 	sigaddset(&set, SIGCHLD);
 	sigaddset(&set, SIGUSR1);
 	sigprocmask(SIG_BLOCK, &set, &oldset);
 	if (argc > 1) {
-		if (sigaction(SIGCHLD, &act, NULL) == -1)
-			err(1, "sigaction");
-		if (sigaction(SIGUSR1, &act, NULL) == -1)
-			err(1, "sigaction");
 		switch ((child = fork())) {
 		case -1:
 			err(1, "fork");
@@ -119,11 +123,41 @@ main(int argc, char *argv[])
 		}
 	}
 	for (;;) {
-		sigsuspend(&oldset);
-		if (lastsig != SIGCHLD || child == 0)
+		struct timespec	ts = {
+			.tv_sec = 2000,
+			.tv_nsec = 0,
+		};
+
+		sig = sigtimedwait(&set, NULL, &ts);
+		time_t tm = time(NULL);
+		fputs(ctime(&tm), stdout); // XXX
+		switch (sig) {
+		case -1:
 			break;
+		case SIGCHLD:
+			if (wait4(child, &status, WNOHANG, NULL) == child &&
+			    (WIFEXITED(status) || WIFSIGNALED(status))) {
+				return 0;
+			}
+			break;
+		case SIGUSR1:
+			return 127;
+		default:
+			printf("sig %d\n", sig); // XXX
+			return 0;
+		}
+		XScreenSaverSuspend(dpy, True); // XXX
+		int ret = XNoOp(dpy);
+		printf("XNoOp %d\n", ret);
+		ret = XFlush(dpy);
+		printf("XFlush %d\n", ret);
+		ret = XPending(dpy);
+		printf("XPending %d\n", ret);
+		//ret = XSync(dpy, True);
+		//printf("XSync %d\n", ret);
 	}
-	if (lastsig == SIGUSR1)
+	printf("exit\n");
+	if (sig == SIGUSR1)
 		return 127;
 	return 0;
 }
