@@ -56,6 +56,7 @@ eh(Display *dpy, XErrorEvent *e)
 	/* NOTREACHED */
 }
 
+#if 0
 static void watch(Display *dpy, XPointer client_data, int fd, Bool opening,
     XPointer *watch_data)
 {
@@ -83,6 +84,7 @@ static void add_watch(void)
 			warnx("XAddConnectionWatch");
 	}
 }
+#endif
 
 int
 main(int argc, char *argv[])
@@ -98,7 +100,9 @@ main(int argc, char *argv[])
 		errx(1, "X11 extension MIT-SCREEN-SAVER not supported");
 	XSetErrorHandler(eh);
 	XScreenSaverSuspend(dpy, True);
-	add_watch();
+	//XNoOp(dpy);
+	XFlush(dpy);
+	//add_watch();
 	sigemptyset(&set);
 	sigaddset(&set, SIGINT);
 	sigaddset(&set, SIGTERM);
@@ -122,12 +126,23 @@ main(int argc, char *argv[])
 			err(1, "exec");
 		}
 	}
+	//XSync(dpy, True); // XXX
 	for (;;) {
 		struct timespec	ts = {
-			.tv_sec = 2000,
+			.tv_sec = 7200,
 			.tv_nsec = 0,
 		};
 
+#if 0
+		int ret = XNoOp(dpy);
+		printf("XNoOp %d\n", ret);
+		ret = XFlush(dpy);
+		printf("XFlush %d\n", ret);
+		ret = XPending(dpy);
+		printf("XPending %d\n", ret);
+		//ret = XSync(dpy, True);
+		//printf("XSync %d\n", ret);
+#endif
 		sig = sigtimedwait(&set, NULL, &ts);
 		time_t tm = time(NULL);
 		fputs(ctime(&tm), stdout); // XXX
@@ -146,15 +161,7 @@ main(int argc, char *argv[])
 			printf("sig %d\n", sig); // XXX
 			return 0;
 		}
-		XScreenSaverSuspend(dpy, True); // XXX
-		int ret = XNoOp(dpy);
-		printf("XNoOp %d\n", ret);
-		ret = XFlush(dpy);
-		printf("XFlush %d\n", ret);
-		ret = XPending(dpy);
-		printf("XPending %d\n", ret);
-		//ret = XSync(dpy, True);
-		//printf("XSync %d\n", ret);
+		//XScreenSaverSuspend(dpy, True); // XXX
 	}
 	printf("exit\n");
 	if (sig == SIGUSR1)
