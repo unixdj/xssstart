@@ -76,4 +76,8 @@ SEE ALSO
 AUTHORS
      Vadim Vygonets <vadik@vygo.net>
 
-BSD                             30 January 2022                            BSD
+BUGS
+     xsssuspend does not detect disconnection from the X server, and will hang
+     until it's killed.
+
+BSD                             3 February 2022                            BSD

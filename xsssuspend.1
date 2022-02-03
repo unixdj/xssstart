@@ -12,7 +12,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd 30 January 2022
+.Dd 3 February 2022
 .Dt XSSSUSPEND 1 LOCAL
 .Os
 .Sh NAME
@@ -62,3 +62,7 @@ Exit status of the command is not propagated.
 .Xr xset 1
 .Sh AUTHORS
 .An Vadim Vygonets Aq vadik@vygo.net
+.Sh BUGS
+.Nm
+does not detect disconnection from the X server,
+and will hang until it's killed.

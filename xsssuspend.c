@@ -87,6 +87,7 @@ main(int argc, char *argv[])
 		errx(1, "X11 extension MIT-SCREEN-SAVER not supported");
 	XSetErrorHandler(eh);
 	XScreenSaverSuspend(dpy, True);
+	XFlush(dpy);
 	sigemptyset(&set);
 	if (sigaction(SIGINT, &act, NULL) == -1)
 		err(1, "sigaction");
