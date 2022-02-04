@@ -50,9 +50,12 @@ DESCRIPTION
      nected from the X server, the timers are restarted, unless suspended by
      another client.
 
-     If no command is given, xsssuspend will wait indefinitely until it's ter‐
-     minated by a signal.  It's meant to be killed by a keyboard interrupt
-     (normally Control-C).
+     xsssuspend will shut down the X server connection and exit if it receives
+     the SIGINT (keyboard interrupt, normally Control-C) or SIGTERM (termina‐
+     tion) signal.
+
+     Once per hour xsssuspend wakes up to check its connection to the X
+     server, and will exit with status 1 on any X error.
 
      If a command is given, xsssuspend runs the command and exits after it's
      finished, or immediately if execution fails.
@@ -66,9 +69,8 @@ DIAGNOSTICS
      xsssuspend exits 0 on success, 127 if exec(3) fails and 1 if another er‐
      ror occurs.
 
-     Being killed by SIGINT (keyboard interrupt) or SIGTERM (termination) sig‐
-     nal is not considered an error.  Exit status of the command is not propa‐
-     gated.
+     Being killed by a SIGINT or SIGTERM signal is not considered an error.
+     Exit status of the command is not propagated.
 
 SEE ALSO
      XScreenSaverSuspend(3), xset(1)
@@ -76,8 +78,4 @@ SEE ALSO
 AUTHORS
      Vadim Vygonets <vadik@vygo.net>
 
-BUGS
-     xsssuspend does not detect disconnection from the X server, and will hang
-     until it's killed.
-
-BSD                             3 February 2022                            BSD
+BSD                             4 February 2022                            BSD

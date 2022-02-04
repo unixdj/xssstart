@@ -12,7 +12,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd 3 February 2022
+.Dd 4 February 2022
 .Dt XSSSUSPEND 1 LOCAL
 .Os
 .Sh NAME
@@ -29,11 +29,19 @@ After
 terminates for any reason or is disconnected from the X server,
 the timers are restarted, unless suspended by another client.
 .Pp
-If no command is given,
 .Nm
-will wait indefinitely until it's terminated by a signal.
-It's meant to be killed by a keyboard interrupt (normally
-.Li Control-C ) .
+will shut down the X server connection and exit if it receives the
+.Dv SIGINT
+(keyboard interrupt, normally
+.Li Control-C )
+or
+.Dv SIGTERM
+(termination) signal.
+.Pp
+Once per hour
+.Nm
+wakes up to check its connection to the X server,
+and will exit with status 1 on any X error.
 .Pp
 If a command is given,
 .Nm
@@ -51,18 +59,14 @@ exits 0 on success, 127 if
 .Xr exec 3
 fails and 1 if another error occurs.
 .Pp
-Being killed by
+Being killed by a
 .Dv SIGINT
-(keyboard interrupt) or
+or
 .Dv SIGTERM
-(termination) signal is not considered an error.
+signal is not considered an error.
 Exit status of the command is not propagated.
 .Sh SEE ALSO
 .Xr XScreenSaverSuspend 3 ,
 .Xr xset 1
 .Sh AUTHORS
 .An Vadim Vygonets Aq vadik@vygo.net
-.Sh BUGS
-.Nm
-does not detect disconnection from the X server,
-and will hang until it's killed.

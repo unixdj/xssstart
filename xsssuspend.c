@@ -34,9 +34,9 @@
 #endif
 #endif
 
-static volatile pid_t	 child;
-static volatile int	 lastsig;
-static Display		*dpy;
+#define DELAY	3600
+
+static Display	*dpy;
 
 static void
 closedisplay(void)
@@ -57,28 +57,16 @@ eh(Display *dpy, XErrorEvent *e)
 	/* NOTREACHED */
 }
 
-static void
-handle(int sig)
-{
-	int	status;
-
-	lastsig = sig;
-	if (sig == SIGCHLD &&
-	    wait4(child, &status, WNOHANG, NULL) == child &&
-	    (WIFEXITED(status) || WIFSIGNALED(status))) {
-		child = 0;
-	}
-}
-
 int
 main(int argc, char *argv[])
 {
-	struct sigaction act = {
-		.sa_handler =	handle,
-		.sa_flags =	SA_NOCLDSTOP | SA_RESTART,
+	struct timespec	ts = {
+		.tv_sec = DELAY,
+		.tv_nsec = 0,
 	};
-	sigset_t	set, oldset;
-	int		evbase, errbase;
+	sigset_t	set;
+	pid_t		child;
+	int		evbase, errbase, status;
 
 	if ((dpy = XOpenDisplay(NULL)) == NULL)
 		errx(1, "no display");
@@ -87,22 +75,13 @@ main(int argc, char *argv[])
 		errx(1, "X11 extension MIT-SCREEN-SAVER not supported");
 	XSetErrorHandler(eh);
 	XScreenSaverSuspend(dpy, True);
-	XFlush(dpy);
 	sigemptyset(&set);
-	if (sigaction(SIGINT, &act, NULL) == -1)
-		err(1, "sigaction");
-	if (sigaction(SIGTERM, &act, NULL) == -1)
-		err(1, "sigaction");
 	sigaddset(&set, SIGINT);
 	sigaddset(&set, SIGTERM);
 	sigaddset(&set, SIGCHLD);
 	sigaddset(&set, SIGUSR1);
-	sigprocmask(SIG_BLOCK, &set, &oldset);
+	sigprocmask(SIG_BLOCK, &set, NULL);
 	if (argc > 1) {
-		if (sigaction(SIGCHLD, &act, NULL) == -1)
-			err(1, "sigaction");
-		if (sigaction(SIGUSR1, &act, NULL) == -1)
-			err(1, "sigaction");
 		switch ((child = fork())) {
 		case -1:
 			err(1, "fork");
@@ -120,11 +99,21 @@ main(int argc, char *argv[])
 		}
 	}
 	for (;;) {
-		sigsuspend(&oldset);
-		if (lastsig != SIGCHLD || child == 0)
+		XFlush(dpy);
+		switch (sigtimedwait(&set, NULL, &ts)) {
+		case -1:
 			break;
+		case SIGCHLD:
+			if (wait4(child, &status, WNOHANG, NULL) == child &&
+			    (WIFEXITED(status) || WIFSIGNALED(status))) {
+				return 0;
+			}
+			break;
+		case SIGUSR1:
+			return 127;
+		default:
+			return 0;
+		}
 	}
-	if (lastsig == SIGUSR1)
-		return 127;
-	return 0;
+	/* NOTREACHED */
 }
