@@ -86,6 +86,7 @@ main(int argc, char *argv[])
 		case -1:
 			err(1, "fork");
 		case 0:
+			sigprocmask(SIG_UNBLOCK, &set, NULL);
 			execvp(argv[1], argv + 1);
 			dpy = NULL;
 			{
