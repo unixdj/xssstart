@@ -46,19 +46,22 @@ SYNOPSIS
 
 DESCRIPTION
      xsssuspend suspends the X screen saver and DPMS timer for the duration of
-     its runtime.  After xsssuspend terminates for any reason or is discon‐
-     nected from the X server, the timers are restarted, unless suspended by
-     another client.
+     its runtime.  After it terminates for any reason or is disconnected from
+     the X server, the timers are restarted, unless suspended by another
+     client.
 
-     xsssuspend will shut down the X server connection and exit if it receives
-     the SIGINT (keyboard interrupt, normally Control-C) or SIGTERM (termina‐
-     tion) signal.
-
-     Once per hour xsssuspend wakes up to check its connection to the X
-     server, and will exit with status 1 on any X error.
+     xsssuspend shuts down the X server connection and exits with status 0 if
+     it receives the SIGTERM (termination) signal.  If no command is given,
+     SIGINT (keyboard interrupt, normally Control-C) is handled in the same
+     manner.
 
      If a command is given, xsssuspend runs the command and exits after it's
-     finished, or immediately if execution fails.
+     finished, or immediately if execution fails.  SIGINT is ignored in this
+     mode, delegating its handling to the child process.
+
+     If initialisation fails, xsssuspend exits immediately.  It wakes up once
+     per hour to check its connection to the X server, and exits on any X er‐
+     ror.
 
 EXAMPLES
      xsssuspend telnet towel.blinkenlights.nl
@@ -66,11 +69,10 @@ EXAMPLES
              the duration of the film.
 
 DIAGNOSTICS
-     xsssuspend exits 0 on success, 127 if exec(3) fails and 1 if another er‐
-     ror occurs.
-
-     Being killed by a SIGINT or SIGTERM signal is not considered an error.
-     Exit status of the command is not propagated.
+     xsssuspend exits 0 if killed by SIGINT or SIGTERM, 126 if exec(3) fails
+     and 127 if another error occurs.  If the child process exits, xsssuspend
+     propagates its exit status.  If the child process is terminated by a sig‐
+     nal, xsssuspend exits 128 plus the signal number.
 
 SEE ALSO
      XScreenSaverSuspend(3), xset(1)
@@ -78,4 +80,4 @@ SEE ALSO
 AUTHORS
      Vadim Vygonets <vadik@vygo.net>
 
-BSD                             4 February 2022                            BSD
+BSD                              26 March 2022                             BSD

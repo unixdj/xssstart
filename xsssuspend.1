@@ -12,7 +12,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd 4 February 2022
+.Dd 26 March 2022
 .Dt XSSSUSPEND 1 LOCAL
 .Os
 .Sh NAME
@@ -24,29 +24,33 @@
 .Sh DESCRIPTION
 .Nm
 suspends the X screen saver and DPMS timer for the duration of its runtime.
-After
-.Nm
+After it
 terminates for any reason or is disconnected from the X server,
 the timers are restarted, unless suspended by another client.
 .Pp
 .Nm
-will shut down the X server connection and exit if it receives the
+shuts down the X server connection and exits with status 0
+if it receives the
+.Dv SIGTERM
+(termination) signal.
+If no command is given,
 .Dv SIGINT
 (keyboard interrupt, normally
 .Li Control-C )
-or
-.Dv SIGTERM
-(termination) signal.
-.Pp
-Once per hour
-.Nm
-wakes up to check its connection to the X server,
-and will exit with status 1 on any X error.
+is handled in the same manner.
 .Pp
 If a command is given,
 .Nm
 runs the command and exits after it's finished,
 or immediately if execution fails.
+.Dv SIGINT
+is ignored in this mode, delegating its handling to the child process.
+.Pp
+If initialisation fails,
+.Nm
+exits immediately.
+It wakes up once per hour to check its connection to the X server,
+and exits on any X error.
 .Sh EXAMPLES
 .Bl -tag -width indent
 .It Li "xsssuspend telnet towel.blinkenlights.nl"
@@ -55,16 +59,19 @@ suspending the screen saver for the duration of the film.
 .El
 .Sh DIAGNOSTICS
 .Nm
-exits 0 on success, 127 if
-.Xr exec 3
-fails and 1 if another error occurs.
-.Pp
-Being killed by a
+exits 0 if killed by
 .Dv SIGINT
 or
-.Dv SIGTERM
-signal is not considered an error.
-Exit status of the command is not propagated.
+.Dv SIGTERM ,
+126 if
+.Xr exec 3
+fails and 127 if another error occurs.
+If the child process exits,
+.Nm
+propagates its exit status.
+If the child process is terminated by a signal,
+.Nm
+exits 128 plus the signal number.
 .Sh SEE ALSO
 .Xr XScreenSaverSuspend 3 ,
 .Xr xset 1

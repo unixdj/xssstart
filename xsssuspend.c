@@ -34,7 +34,11 @@
 #endif
 #endif
 
-#define DELAY	3600
+#define EXIT_EXEC	126
+#define EXIT_ERR	127
+#define EXIT_SIG	128
+
+#define DELAY		3600
 
 static Display	*dpy;
 
@@ -53,7 +57,7 @@ eh(Display *dpy, XErrorEvent *e)
 	char buf[BUFSIZ];
 
 	XGetErrorText(dpy, e->error_code, buf, sizeof(buf));
-	errx(1, "X error: %s", buf);
+	errx(EXIT_ERR, "X error: %s", buf);
 	/* NOTREACHED */
 }
 
@@ -61,60 +65,69 @@ int
 main(int argc, char *argv[])
 {
 	struct timespec	ts = {
-		.tv_sec = DELAY,
-		.tv_nsec = 0,
+		.tv_sec		= DELAY,
+		.tv_nsec	= 0,
 	};
 	sigset_t	set;
-	pid_t		child;
+	pid_t		child = 0;
 	int		evbase, errbase, status;
 
 	if ((dpy = XOpenDisplay(NULL)) == NULL)
-		errx(1, "no display");
+		errx(EXIT_ERR, "no display");
 	atexit(closedisplay);
-	if (!XScreenSaverQueryExtension(dpy, &evbase, &errbase))
-		errx(1, "X11 extension MIT-SCREEN-SAVER not supported");
 	XSetErrorHandler(eh);
+	if (!XScreenSaverQueryExtension(dpy, &evbase, &errbase))
+		errx(EXIT_ERR, "X11 extension MIT-SCREEN-SAVER not supported");
 	XScreenSaverSuspend(dpy, True);
+	XFlush(dpy);
+
 	sigemptyset(&set);
-	sigaddset(&set, SIGINT);
 	sigaddset(&set, SIGTERM);
-	sigaddset(&set, SIGCHLD);
-	sigaddset(&set, SIGUSR1);
-	sigprocmask(SIG_BLOCK, &set, NULL);
+	if (argc > 1)
+		sigaddset(&set, SIGCHLD);
+	else
+		sigaddset(&set, SIGINT);
+	if (sigprocmask(SIG_BLOCK, &set, NULL) == -1)
+		err(EXIT_ERR, "sigprocmask");
+
 	if (argc > 1) {
+		struct sigaction	sa = {
+			.sa_handler	= SIG_IGN,
+		};
+
+		if (sigaction(SIGINT, &sa, NULL) == -1)
+			err(EXIT_ERR, "sigaction");
 		switch ((child = fork())) {
 		case -1:
-			err(1, "fork");
+			err(EXIT_ERR, "fork");
 		case 0:
-			sigprocmask(SIG_UNBLOCK, &set, NULL);
+			sa.sa_handler = SIG_DFL;
+			if (sigaction(SIGINT, &sa, NULL) == -1)
+				err(EXIT_ERR, "sigaction");
+			if (sigprocmask(SIG_UNBLOCK, &set, NULL) == -1)
+				err(EXIT_ERR, "sigprocmask");
 			execvp(argv[1], argv + 1);
 			dpy = NULL;
-			{
-				int	ee = errno;
-
-				if (kill(getppid(), SIGUSR1) == -1)
-					warn("kill");
-				errno = ee;
-			}
-			err(1, "exec");
+			err(EXIT_EXEC, "exec");
 		}
 	}
+
 	for (;;) {
-		XFlush(dpy);
 		switch (sigtimedwait(&set, NULL, &ts)) {
 		case -1:
 			break;
 		case SIGCHLD:
-			if (wait4(child, &status, WNOHANG, NULL) == child &&
-			    (WIFEXITED(status) || WIFSIGNALED(status))) {
-				return 0;
+			if (wait4(child, &status, WNOHANG, NULL) == child) {
+				if (WIFEXITED(status))
+					return WEXITSTATUS(status);
+				if (WIFSIGNALED(status))
+					return EXIT_SIG + WTERMSIG(status);
 			}
 			break;
-		case SIGUSR1:
-			return 127;
 		default:
 			return 0;
 		}
+		XFlush(dpy);
 	}
 	/* NOTREACHED */
 }
