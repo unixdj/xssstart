@@ -11,7 +11,7 @@ MANS	= $(PROG:=.1)
 INTRO	= intro.0
 
 ROFF	?= groff -Tps -mps -mdoc
-NROFF	?= nroff -mdoc
+NROFF	?= nroff -c -mdoc
 
 all: $(PROG)
 
@@ -35,7 +35,7 @@ maninstall:
 README: $(INTRO) $(MANS)
 	( for i in $(INTRO) $(MANS) ; do \
 		$(NROFF) $$i ; \
-	done ) | colcrt - >$@
+	done ) | col -b -p -x >$@
 
 clean:
 	-rm -f $(PROG) $(OBJS) core $(PROG:=.core)
