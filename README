@@ -69,10 +69,21 @@ EXAMPLES
              the duration of the film.
 
 DIAGNOSTICS
-     xsssuspend exits 0 if killed by SIGINT or SIGTERM, 126 if exec(3) fails
-     and 127 if another error occurs.  If the child process exits, xsssuspend
-     propagates its exit status.  If the child process is terminated by a sig‐
-     nal, xsssuspend exits 128 plus the signal number.
+     If xsssuspend exits as the result of the command child process exiting,
+     its exit status will be that of the child process.  Otherwise it will
+     exit with one of the following values:
+
+     0       xsssuspend was killed by SIGINT or SIGTERM.
+
+     125     An X11 error occurred after initialisation.
+
+     126     The command was found, but could not be invoked.
+
+     127     The command was not found, or another error occurred during ini‐
+             tialisation.
+
+     >128    The child process was terminated by a signal.  The exit status is
+             128 plus the signal number.
 
 SEE ALSO
      XScreenSaverSuspend(3), xset(1)
@@ -80,4 +91,4 @@ SEE ALSO
 AUTHORS
      Vadim Vygonets <vadik@vygo.net>
 
-BSD                              26 March 2022                             BSD
+BSD                             8 January 2024                             BSD
