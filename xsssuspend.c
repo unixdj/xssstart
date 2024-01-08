@@ -34,12 +34,15 @@
 #endif
 #endif
 
+#define EXIT_RUNTIME	125
 #define EXIT_EXEC	126
 #define EXIT_ERR	127
+#define EXIT_ENOENT	EXIT_ERR
 #define EXIT_SIG	128
 
 #define DELAY		3600
 
+static int	 xerr = EXIT_ERR;
 static Display	*dpy;
 
 static void
@@ -57,7 +60,7 @@ eh(Display *dpy, XErrorEvent *e)
 	char buf[BUFSIZ];
 
 	XGetErrorText(dpy, e->error_code, buf, sizeof(buf));
-	errx(EXIT_ERR, "X error: %s", buf);
+	errx(xerr, "X error: %s", buf);
 	/* NOTREACHED */
 }
 
@@ -108,10 +111,11 @@ main(int argc, char *argv[])
 				err(EXIT_ERR, "sigprocmask");
 			execvp(argv[1], argv + 1);
 			dpy = NULL;
-			err(EXIT_EXEC, "exec");
+			err(errno == ENOENT ? EXIT_ENOENT : EXIT_EXEC, "exec");
 		}
 	}
 
+	xerr = EXIT_RUNTIME;
 	for (;;) {
 		switch (sigtimedwait(&set, NULL, &ts)) {
 		case -1:

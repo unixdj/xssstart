@@ -12,7 +12,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd 26 March 2022
+.Dd 8 January 2024
 .Dt XSSSUSPEND 1 LOCAL
 .Os
 .Sh NAME
@@ -58,20 +58,34 @@ Watch Star Wars in the terminal,
 suspending the screen saver for the duration of the film.
 .El
 .Sh DIAGNOSTICS
+If
 .Nm
-exits 0 if killed by
+exits as the result of the
+.Ar command
+child process exiting, its exit status will be that of the child process.
+Otherwise it will exit with one of the following values:
+.Bl -tag -width Ds
+.It 0
+.Nm
+was killed by
 .Dv SIGINT
 or
-.Dv SIGTERM ,
-126 if
-.Xr exec 3
-fails and 127 if another error occurs.
-If the child process exits,
-.Nm
-propagates its exit status.
-If the child process is terminated by a signal,
-.Nm
-exits 128 plus the signal number.
+.Dv SIGTERM .
+.It 125
+An X11 error occurred after initialisation.
+.It 126
+The
+.Ar command
+was found, but could not be invoked.
+.It 127
+The
+.Ar command
+was not found,
+or another error occurred during initialisation.
+.It >128
+The child process was terminated by a signal.
+The exit status is 128 plus the signal number.
+.El
 .Sh SEE ALSO
 .Xr XScreenSaverSuspend 3 ,
 .Xr xset 1
