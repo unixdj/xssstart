@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Vadim Vygonets <vadik@vygo.net>
+ * Copyright (c) 2022, 2024 Vadim Vygonets <vadik@vygo.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
