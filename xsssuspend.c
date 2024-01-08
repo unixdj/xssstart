@@ -43,13 +43,15 @@
 #define DELAY		3600
 
 static int	 xerr = EXIT_ERR;
+static int	 suspended;
 static Display	*dpy;
 
 static void
 closedisplay(void)
 {
 	if (dpy != NULL) {
-		XScreenSaverSuspend(dpy, False);
+		if (suspended)
+			XScreenSaverSuspend(dpy, False);
 		XCloseDisplay(dpy);
 	}
 }
@@ -83,6 +85,7 @@ main(int argc, char *argv[])
 		errx(EXIT_ERR, "X11 extension MIT-SCREEN-SAVER not supported");
 	XScreenSaverSuspend(dpy, True);
 	XFlush(dpy);
+	suspended = 1;
 
 	sigemptyset(&set);
 	sigaddset(&set, SIGTERM);
